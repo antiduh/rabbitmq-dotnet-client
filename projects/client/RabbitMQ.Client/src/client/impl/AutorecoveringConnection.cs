@@ -54,7 +54,6 @@ namespace RabbitMQ.Client.Framing.Impl
     {
         private readonly object m_eventLock = new object();
 
-        private readonly object manuallyClosedLock = new object();
         private Connection m_delegate;
         private ConnectionFactory m_factory;
 
@@ -67,7 +66,6 @@ namespace RabbitMQ.Client.Framing.Impl
         private readonly TaskFactory recoveryTaskFactory = new TaskFactory();
         private readonly object recoveryLockTarget = new object();
         // used to block connection recovery attempts after Close() is invoked
-        private bool manuallyClosed = false;
         private bool performingRecovery = false;
 
 
@@ -96,22 +94,7 @@ namespace RabbitMQ.Client.Framing.Impl
             this.ClientProvidedName = clientProvidedName;
         }
 
-        private bool ManuallyClosed
-        {
-            get
-            {
-                lock(manuallyClosedLock)
-                {
-                    return manuallyClosed;
-                }
-            }
-            set
-            {
-                lock(manuallyClosedLock)
-                {
-                    manuallyClosed = value; }
-                }
-        }
+        private bool ManuallyClosed { get; set; }
 
         public event EventHandler<EventArgs> RecoverySucceeded;
 
