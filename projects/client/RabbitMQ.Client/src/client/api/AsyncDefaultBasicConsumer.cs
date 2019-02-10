@@ -132,10 +132,7 @@ namespace RabbitMQ.Client
             var handler = ConsumerCancelled;
             if (handler != null)
             {
-                foreach (AsyncEventHandler<ConsumerEventArgs> h in handler.GetInvocationList())
-                {
-                    await h(this, new ConsumerEventArgs(ConsumerTag)).ConfigureAwait(false);
-                }
+                await handler.Invoke(this, new ConsumerEventArgs(ConsumerTag)).ConfigureAwait(false);
             }
         }
 
