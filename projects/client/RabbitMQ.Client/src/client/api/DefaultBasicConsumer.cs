@@ -55,8 +55,6 @@ namespace RabbitMQ.Client
     /// </remarks>
     public class DefaultBasicConsumer : IBasicConsumer
     {
-        public EventHandler<ConsumerEventArgs> m_consumerCancelled;
-
         /// <summary>
         /// Creates a new instance of an <see cref="DefaultBasicConsumer"/>.
         /// </summary>
@@ -177,7 +175,7 @@ namespace RabbitMQ.Client
         public virtual void OnCancel()
         {
             IsRunning = false;
-            m_consumerCancelled?.Invoke(this, new ConsumerEventArgs(ConsumerTag ));
+            ConsumerCancelled?.Invoke(this, new ConsumerEventArgs(ConsumerTag ));
         }
     }
 }
