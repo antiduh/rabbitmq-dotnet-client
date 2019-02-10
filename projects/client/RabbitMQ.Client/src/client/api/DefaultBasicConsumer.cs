@@ -101,23 +101,7 @@ namespace RabbitMQ.Client
         /// <summary>
         /// Signalled when the consumer gets cancelled.
         /// </summary>
-        public event EventHandler<ConsumerEventArgs> ConsumerCancelled
-        {
-            add
-            {
-                lock (m_eventLock)
-                {
-                    m_consumerCancelled += value;
-                }
-            }
-            remove
-            {
-                lock (m_eventLock)
-                {
-                    m_consumerCancelled -= value;
-                }
-            }
-        }
+        public event EventHandler<ConsumerEventArgs> ConsumerCancelled;
 
         /// <summary>
         /// Retrieve the <see cref="IModel"/> this consumer is associated with,
@@ -194,18 +178,7 @@ namespace RabbitMQ.Client
         public virtual void OnCancel()
         {
             IsRunning = false;
-            EventHandler<ConsumerEventArgs> handler;
-            lock (m_eventLock)
-            {
-                handler = m_consumerCancelled;
-            }
-            if (handler != null)
-            {
-                foreach (EventHandler<ConsumerEventArgs> h in handler.GetInvocationList())
-                {
-                    h(this, new ConsumerEventArgs(ConsumerTag));
-                }
-            }
+            m_consumerCancelled?.Invoke(this, new ConsumerEventArgs(ConsumerTag ));
         }
     }
 }
