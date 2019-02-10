@@ -89,10 +89,6 @@ namespace RabbitMQ.Client.Framing.Impl
 
         private EventHandler<ShutdownEventArgs> m_recordedShutdownEventHandlers;
         private EventHandler<EventArgs> m_recordedUnblockedEventHandlers;
-        private EventHandler<ConsumerTagChangedAfterRecoveryEventArgs> m_consumerTagChange;
-        private EventHandler<QueueNameChangedAfterRecoveryEventArgs> m_queueNameChange;
-        private EventHandler<EventArgs> m_recovery;
-        private EventHandler<ConnectionRecoveryErrorEventArgs> m_connectionRecoveryError;
 
         public AutorecoveringConnection(ConnectionFactory factory, string clientProvidedName = null)
         {
@@ -117,57 +113,19 @@ namespace RabbitMQ.Client.Framing.Impl
                 }
         }
 
-        public event EventHandler<EventArgs> RecoverySucceeded
-        {
-            add
-            {
-                lock (m_eventLock)
-                {
-                    m_recovery += value;
-                }
-            }
-            remove
-            {
-                lock (m_eventLock)
-                {
-                    m_recovery -= value;
-                }
-            }
-        }
+        public event EventHandler<EventArgs> RecoverySucceeded;
 
-        public event EventHandler<ConnectionRecoveryErrorEventArgs> ConnectionRecoveryError
-        {
-            add
-            {
-                lock (m_eventLock)
-                {
-                    m_connectionRecoveryError += value;
-                }
-            }
-            remove
-            {
-                lock (m_eventLock)
-                {
-                    m_connectionRecoveryError -= value;
-                }
-            }
-        }
+        public event EventHandler<ConnectionRecoveryErrorEventArgs> ConnectionRecoveryError;
 
         public event EventHandler<CallbackExceptionEventArgs> CallbackException
         {
             add
             {
-                lock (m_eventLock)
-                {
-                    m_delegate.CallbackException += value;
-                }
+                m_delegate.CallbackException += value;
             }
             remove
             {
-                lock (m_eventLock)
-                {
-                    m_delegate.CallbackException -= value;
-                }
+                m_delegate.CallbackException -= value;
             }
         }
 
@@ -231,41 +189,9 @@ namespace RabbitMQ.Client.Framing.Impl
             }
         }
 
-        public event EventHandler<ConsumerTagChangedAfterRecoveryEventArgs> ConsumerTagChangeAfterRecovery
-        {
-            add
-            {
-                lock (m_eventLock)
-                {
-                    m_consumerTagChange += value;
-                }
-            }
-            remove
-            {
-                lock (m_eventLock)
-                {
-                    m_consumerTagChange -= value;
-                }
-            }
-        }
+        public event EventHandler<ConsumerTagChangedAfterRecoveryEventArgs> ConsumerTagChangeAfterRecovery;
 
-        public event EventHandler<QueueNameChangedAfterRecoveryEventArgs> QueueNameChangeAfterRecovery
-        {
-            add
-            {
-                lock (m_eventLock)
-                {
-                    m_queueNameChange += value;
-                }
-            }
-            remove
-            {
-                lock (m_eventLock)
-                {
-                    m_queueNameChange -= value;
-                }
-            }
-        }
+        public event EventHandler<QueueNameChangedAfterRecoveryEventArgs> QueueNameChangeAfterRecovery;
 
         public string ClientProvidedName { get; private set; }
 
@@ -814,7 +740,7 @@ namespace RabbitMQ.Client.Framing.Impl
                 {
                     ESLog.Error("Connection recovery exception.", e);
                     // Trigger recovery error events
-                    var handler = m_connectionRecoveryError;
+                    var handler = ConnectionRecoveryError;
                     if (handler != null)
                     {
                         var args = new ConnectionRecoveryErrorEventArgs(e);
@@ -871,9 +797,10 @@ namespace RabbitMQ.Client.Framing.Impl
                         m_recordedConsumers.Add(newTag, cons);
                     }
 
-                    if (m_consumerTagChange != null)
+                    var handler = ConsumerTagChangeAfterRecovery;
+                    if (handler != null)
                     {
-                        foreach (EventHandler<ConsumerTagChangedAfterRecoveryEventArgs> h in m_consumerTagChange.GetInvocationList())
+                        foreach (EventHandler<ConsumerTagChangedAfterRecoveryEventArgs> h in handler.GetInvocationList())
                         {
                             try
                             {
@@ -967,9 +894,10 @@ namespace RabbitMQ.Client.Framing.Impl
                         }
                         RecordQueue(newName, rq);
 
-                        if (m_queueNameChange != null)
+                        var handler = QueueNameChangeAfterRecovery;
+                        if (handler != null)
                         {
-                            foreach (EventHandler<QueueNameChangedAfterRecoveryEventArgs> h in m_queueNameChange.GetInvocationList())
+                            foreach (EventHandler<QueueNameChangedAfterRecoveryEventArgs> h in handler.GetInvocationList())
                             {
                                 try
                                 {
@@ -997,7 +925,7 @@ namespace RabbitMQ.Client.Framing.Impl
 
         private void RunRecoveryEventHandlers()
         {
-            EventHandler<EventArgs> handler = m_recovery;
+            EventHandler<EventArgs> handler = RecoverySucceeded;
             if (handler != null)
             {
                 foreach (EventHandler<EventArgs> reh in handler.GetInvocationList())
