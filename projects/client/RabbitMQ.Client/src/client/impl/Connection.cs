@@ -71,18 +71,13 @@ namespace RabbitMQ.Client.Framing.Impl
         private readonly EmptyOutboundFrame m_heartbeatFrame = new EmptyOutboundFrame();
 
         private ManualResetEvent m_appContinuation = new ManualResetEvent(false);
-        private EventHandler<CallbackExceptionEventArgs> m_callbackException;
-        private EventHandler<EventArgs> m_recoverySucceeded;
-        private EventHandler<ConnectionRecoveryErrorEventArgs> connectionRecoveryFailure;
 
         private IDictionary<string, object> m_clientProperties;
 
         private volatile ShutdownEventArgs m_closeReason = null;
         private volatile bool m_closed = false;
 
-        private EventHandler<ConnectionBlockedEventArgs> m_connectionBlocked;
         private EventHandler<ShutdownEventArgs> m_connectionShutdown;
-        private EventHandler<EventArgs> m_connectionUnblocked;
 
         private IConnectionFactory m_factory;
         private IFrameHandler m_frameHandler;
@@ -155,59 +150,11 @@ namespace RabbitMQ.Client.Framing.Impl
 
         public Guid Id { get { return m_id; } }
 
-        public event EventHandler<EventArgs> RecoverySucceeded
-        {
-            add
-            {
-                lock (m_eventLock)
-                {
-                    m_recoverySucceeded += value;
-                }
-            }
-            remove
-            {
-                lock (m_eventLock)
-                {
-                    m_recoverySucceeded -= value;
-                }
-            }
-        }
+        public event EventHandler<EventArgs> RecoverySucceeded;
 
-        public event EventHandler<CallbackExceptionEventArgs> CallbackException
-        {
-            add
-            {
-                lock (m_eventLock)
-                {
-                    m_callbackException += value;
-                }
-            }
-            remove
-            {
-                lock (m_eventLock)
-                {
-                    m_callbackException -= value;
-                }
-            }
-        }
+        public event EventHandler<CallbackExceptionEventArgs> CallbackException;
 
-        public event EventHandler<ConnectionBlockedEventArgs> ConnectionBlocked
-        {
-            add
-            {
-                lock (m_eventLock)
-                {
-                    m_connectionBlocked += value;
-                }
-            }
-            remove
-            {
-                lock (m_eventLock)
-                {
-                    m_connectionBlocked -= value;
-                }
-            }
-        }
+        public event EventHandler<ConnectionBlockedEventArgs> ConnectionBlocked;
 
         public event EventHandler<ShutdownEventArgs> ConnectionShutdown
         {
@@ -236,41 +183,10 @@ namespace RabbitMQ.Client.Framing.Impl
             }
         }
 
-        public event EventHandler<EventArgs> ConnectionUnblocked
-        {
-            add
-            {
-                lock (m_eventLock)
-                {
-                    m_connectionUnblocked += value;
-                }
-            }
-            remove
-            {
-                lock (m_eventLock)
-                {
-                    m_connectionUnblocked -= value;
-                }
-            }
-        }
+        public event EventHandler<EventArgs> ConnectionUnblocked;
 
-        public event EventHandler<ConnectionRecoveryErrorEventArgs> ConnectionRecoveryError
-        {
-            add
-            {
-                lock (m_eventLock)
-                {
-                    connectionRecoveryFailure += value;
-                }
-            }
-            remove
-            {
-                lock (m_eventLock)
-                {
-                    connectionRecoveryFailure -= value;
-                }
-            }
-        }
+        public event EventHandler<ConnectionRecoveryErrorEventArgs> ConnectionRecoveryError;
+
         public string ClientProvidedName { get; private set; }
 
         public ushort ChannelMax
@@ -788,11 +704,7 @@ namespace RabbitMQ.Client.Framing.Impl
 
         public void OnCallbackException(CallbackExceptionEventArgs args)
         {
-            EventHandler<CallbackExceptionEventArgs> handler;
-            lock (m_eventLock)
-            {
-                handler = m_callbackException;
-            }
+            var handler = CallbackException;
             if (handler != null)
             {
                 foreach (EventHandler<CallbackExceptionEventArgs> h in handler.GetInvocationList())
@@ -814,11 +726,7 @@ namespace RabbitMQ.Client.Framing.Impl
 
         public void OnConnectionBlocked(ConnectionBlockedEventArgs args)
         {
-            EventHandler<ConnectionBlockedEventArgs> handler;
-            lock (m_eventLock)
-            {
-                handler = m_connectionBlocked;
-            }
+            var handler = ConnectionBlocked;
             if (handler != null)
             {
                 foreach (EventHandler<ConnectionBlockedEventArgs> h in handler.GetInvocationList())
@@ -841,11 +749,7 @@ namespace RabbitMQ.Client.Framing.Impl
 
         public void OnConnectionUnblocked()
         {
-            EventHandler<EventArgs> handler;
-            lock (m_eventLock)
-            {
-                handler = m_connectionUnblocked;
-            }
+            var handler = ConnectionUnblocked;
             if (handler != null)
             {
                 foreach (EventHandler<EventArgs> h in handler.GetInvocationList())
